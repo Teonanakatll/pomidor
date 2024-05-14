@@ -14,7 +14,7 @@ class BooksApiTestCase(APITestCase):
         # client - клиентский запрос
         response = self.client.get(url)
 
-        # data - чтобы получить данные
+        # отправляем в сериализатор модели, data - чтобы получить данные
         serializer_data = BooksSerializer([book_1, book_2], many=True).data
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
