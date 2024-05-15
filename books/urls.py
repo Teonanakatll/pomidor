@@ -34,6 +34,8 @@ router_book.register(r'book', BookViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # авторизация на основе сессий и cookies
+    path('api/v1/drf-auth/', include('rest_framework.urls')),
     # path('api/v1/', include(router_book.urls)),
     # path('api/v1/', include(router_women.urls)),
     path('api/v1/women/', WomenAPIList.as_view()),

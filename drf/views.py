@@ -16,6 +16,12 @@ from drf.serializers import WomenSerializer
 # isAdminUser - только для администраторов
 # isAuthenticatedOrReadOnly - только для авторизованных или всем, но только для чтения
 
+# Авторизация и аутентификация
+# Session-based authentication - аутентификация на осенве сессий и cookies
+# Token-based authentication - аутентификация на основе токенов
+# JSON Web Token (JWT) - аутентификация на основе JWT-токенов
+# Django REST framework OAuth - авторизация через социальные сети
+
 class WomenAPIList(generics.ListCreateAPIView):
      queryset = Women.objects.all()
      serializer_class = WomenSerializer
