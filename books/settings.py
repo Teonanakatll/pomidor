@@ -42,6 +42,9 @@ INSTALLED_APPS = [
     'drf.apps.DrfConfig',
 
     'rest_framework',
+    # чтобы дрф использовал свою стандартную таблицу токенов
+    'rest_framework.authtoken',
+    'djoser',
 ]
 
 MIDDLEWARE = [
@@ -141,5 +144,11 @@ REST_FRAMEWORK = {
     # глобальное ограничение доступа на уровне всего проекта
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',
-    # ]
+    # ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        # 2 строчки разрешают аутентификацию по сессиям
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
 }

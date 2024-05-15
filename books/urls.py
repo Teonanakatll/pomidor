@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import SimpleRouter, DefaultRouter
 
 from drf.views import WomenAPIList, \
@@ -36,6 +36,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # авторизация на основе сессий и cookies
     path('api/v1/drf-auth/', include('rest_framework.urls')),
+
+    # пути djoser
+    path('api/v1/auth/', include('djoser.urls')),
+    re_path(r'^auth/', include('djoser.urls.authtoken')),
+
+
     # path('api/v1/', include(router_book.urls)),
     # path('api/v1/', include(router_women.urls)),
     path('api/v1/women/', WomenAPIList.as_view()),
