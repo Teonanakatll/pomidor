@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -14,6 +15,7 @@ class Women(models.Model):
     updated = models.DateTimeField('Время изменения', auto_now=True)
     is_published = models.BooleanField('Опубликованно', default=True)
     cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
 
     def __str__(self):
         return self.title

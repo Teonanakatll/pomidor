@@ -12,6 +12,9 @@ from drf.models import Women
 
 
 class WomenSerializer(serializers.ModelSerializer):
+    # для автоматического заполнения поля юзер данными текнщего пользователя
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Women
         # cat - записываем название поля внешнего ключа

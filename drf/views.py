@@ -4,31 +4,56 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 
 from drf.models import Women, Category
+from drf.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from drf.serializers import WomenSerializer
 
+# Ограничение доступа (permissions)
+# AllowAny - полный доступ (стоит по умолчанию)
+# isAuthenticated - только для зарегистрированных пользователей
+# isAdminUser - только для администраторов
+# isAuthenticatedOrReadOnly - только для авторизованных или всем, но только для чтения
 
-class WomenViewSet(viewsets.ModelViewSet):
+class WomenAPIList(generics.ListCreateAPIView):
+     queryset = Women.objects.all()
+     serializer_class = WomenSerializer
+     permission_classes = (IsAuthenticatedOrReadOnly, )
+
+
+class WomenAPIUpdate(generics.RetrieveUpdateAPIView):
     queryset = Women.objects.all()
     serializer_class = WomenSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
 
-    # для получения пользователем выборки моделей необходимо переопределить метод get_queryset
-    def get_queryset(self):
-        pk = self.kwargs.get("pk")
+class WomenAPIDestroy(generics.RetrieveDestroyAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+    # IsAdminOrReadOnly - наш собственный класс
+    permission_classes = (IsAdminOrReadOnly,)
 
-        if not pk:
-            return Women.objects.all()[:3]
 
-        # метод filter возвращает список с одной записью, qet_queryset должен возвращать список
-        return Women.objects.filter(pk=pk)
-
-    # если стандартных путей недостаточно можно добавлять даполнительные с помощю декоратора @action(methods=['get'])
-    # detail=True - вернуть одну запись
-    @action(methods=['get'], detail=True)
-    def category(self, request, pk=None):
-        cats = Category.objects.get(pk=pk)
-        return Response({'cats': cats.name})
+# class WomenViewSet(viewsets.ModelViewSet):
+#     queryset = Women.objects.all()
+#     serializer_class = WomenSerializer
+#
+#     # для получения пользователем выборки моделей необходимо переопределить метод get_queryset
+#     def get_queryset(self):
+#         pk = self.kwargs.get("pk")
+#
+#         if not pk:
+#             return Women.objects.all()[:3]
+#
+#         # метод filter возвращает список с одной записью, qet_queryset должен возвращать список
+#         return Women.objects.filter(pk=pk)
+#
+#     # если стандартных путей недостаточно можно добавлять даполнительные с помощю декоратора @action(methods=['get'])
+#     # detail=True - вернуть одну запись
+#     @action(methods=['get'], detail=True)
+#     def category(self, request, pk=None):
+#         cats = Category.objects.get(pk=pk)
+#         return Response({'cats': cats.name})
 
 # # реаоизует 2 метода get и post
 # class WomenAPIList(generics.ListCreateAPIView):

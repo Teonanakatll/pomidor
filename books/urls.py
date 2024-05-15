@@ -18,7 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter, DefaultRouter
 
-from drf.views import WomenViewSet  # WomenAPIList, WomenAPIUpdate, WomenAPIDetailView,   # WomenAPIView,
+from drf.views import WomenAPIList, \
+    WomenAPIUpdate, WomenAPIDestroy  # WomenViewSet, WomenAPIList, WomenAPIUpdate, WomenAPIDetailView,   # WomenAPIView,
 from store.views import BookViewSet
 
 router_book = SimpleRouter()
@@ -29,13 +30,15 @@ router_women = DefaultRouter()
 # регистрируем наш путь в роутере, можно использовать необязательный аргумент namespase=,
 # basename=  используется если  нет параметра queryset
 router_book.register(r'book', BookViewSet)
-router_women.register(r'women', WomenViewSet)
-print(router_women.urls)
+# router_women.register(r'women', WomenViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/', include(router_book.urls)),
-    path('api/v1/', include(router_women.urls))
+    # path('api/v1/', include(router_book.urls)),
+    # path('api/v1/', include(router_women.urls)),
+    path('api/v1/women/', WomenAPIList.as_view()),
+    path('api/v1/women/<int:pk>/', WomenAPIUpdate.as_view()),
+    path('api/v1/womendelete/<int:pk>/', WomenAPIDestroy.as_view()),
     # path('api/v1/womenlist/', WomenAPIList.as_view()),
     # для ViewSet можно дополнительно прописывать метод и функцию которая будет его обрабатывать
     # path('api/v1/womenlist/', WomenViewSet.as_view({'get': 'list'})),
