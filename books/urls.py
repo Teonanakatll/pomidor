@@ -15,19 +15,31 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from rest_framework.routers import SimpleRouter
+from django.urls import path, include
+from rest_framework.routers import SimpleRouter, DefaultRouter
 
+from drf.views import WomenViewSet  # WomenAPIList, WomenAPIUpdate, WomenAPIDetailView,   # WomenAPIView,
 from store.views import BookViewSet
 
-router = SimpleRouter()
+router_book = SimpleRouter()
+router_women = DefaultRouter()
+# при использовании DefaultRouter можно обращаться к корню маршрутов (api/v1/) чтобы получить запись, и автоматически
+# появляются имена у маршрутов по имени моделей
 
-# регистрируем наш путь в роутере
-router.register(r'book', BookViewSet)
+# регистрируем наш путь в роутере, можно использовать необязательный аргумент namespase=,
+# basename=  используется если  нет параметра queryset
+router_book.register(r'book', BookViewSet)
+router_women.register(r'women', WomenViewSet)
+print(router_women.urls)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/', include(router_book.urls)),
+    path('api/v1/', include(router_women.urls))
+    # path('api/v1/womenlist/', WomenAPIList.as_view()),
+    # для ViewSet можно дополнительно прописывать метод и функцию которая будет его обрабатывать
+    # path('api/v1/womenlist/', WomenViewSet.as_view({'get': 'list'})),
+    # path('api/v1/womendetail/<int:pk>/', WomenViewSet.as_view({'put': 'update'})),
+    # path('api/v1/womenlist/<int:pk>/', WomenAPIUpdate.as_view()),
+    # path('api/v1/womendetail/<int:pk>/', WomenAPIDetailView.as_view()),
 ]
-
-# добавляем наш роутер в urlpatterns
-urlpatterns += router.urls
