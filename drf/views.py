@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework import generics, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
@@ -23,10 +24,18 @@ from drf.serializers import WomenSerializer
 # JSON Web Token (JWT) - аутентификация на основе JWT-токенов
 # Django REST framework OAuth - авторизация через социальные сети
 
+
+class WomenAPIListPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = 'page_size'
+    # параметр для изменения количества записей пользователеь (в строке браузера &page_size=8500 гет запросом)
+    max_page_size = 10000
+
 class WomenAPIList(generics.ListCreateAPIView):
      queryset = Women.objects.all()
      serializer_class = WomenSerializer
      permission_classes = (IsAuthenticatedOrReadOnly, )
+     pagination_class = WomenAPIListPagination
 
 
 class WomenAPIUpdate(generics.RetrieveUpdateAPIView):

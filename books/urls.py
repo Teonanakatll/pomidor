@@ -24,7 +24,7 @@ from drf.views import WomenAPIList, \
 from store.views import BookViewSet
 
 router_book = SimpleRouter()
-router_women = DefaultRouter()
+# router_women = DefaultRouter()
 # при использовании DefaultRouter можно обращаться к корню маршрутов (api/v1/) чтобы получить запись, и автоматически
 # появляются имена у маршрутов по имени моделей
 
@@ -35,24 +35,27 @@ router_book.register(r'book', BookViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+
+
     # авторизация на основе сессий и cookies
-    path('api/v1/drf-auth/', include('rest_framework.urls')),
+    # path('api/v1/drf-auth/', include('rest_framework.urls')),
 
     # пути JWT
-    path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    # path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('api/v1/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
     # пути djoser
-    path('api/v1/auth/', include('djoser.urls')),
-    re_path(r'^auth/', include('djoser.urls.authtoken')),
+    # path('api/v1/auth/', include('djoser.urls')),
+    # re_path(r'^auth/', include('djoser.urls.authtoken')),
 
 
-    # path('api/v1/', include(router_book.urls)),
+    path('', include(router_book.urls)),
     # path('api/v1/', include(router_women.urls)),
-    path('api/v1/women/', WomenAPIList.as_view()),
-    path('api/v1/women/<int:pk>/', WomenAPIUpdate.as_view()),
-    path('api/v1/womendelete/<int:pk>/', WomenAPIDestroy.as_view()),
+    # path('api/v1/women/', WomenAPIList.as_view()),
+    # path('api/v1/women/<int:pk>/', WomenAPIUpdate.as_view()),
+    # path('api/v1/womendelete/<int:pk>/', WomenAPIDestroy.as_view()),
     # path('api/v1/womenlist/', WomenAPIList.as_view()),
     # для ViewSet можно дополнительно прописывать метод и функцию которая будет его обрабатывать
     # path('api/v1/womenlist/', WomenViewSet.as_view({'get': 'list'})),
