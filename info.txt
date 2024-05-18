@@ -3,3 +3,13 @@
 django-filter
 # для авторизации через социольные сети
 social-auth-app-django
+
+# ссылка на гитхаб проекта
+https://github.com/chepe4pi/books_lessons/tree/day_5/books
+
+                                    # чтобы в Postman работали csrf токены
+
+Однако работает если в хедерах постмана дать 3 вещи key:value следующим образом:
+Cookie:  sessionid=91cjecs319qpoqzy9dbhxni83tdqqyh1
+X-CSRFToken: bY1H6xcLhNyAKmdzwndMfFxVun7ozJXb
+Cookie: csrftoken=bY1H6xcLhNyAKmdzwndMfFxVun7ozJXb
