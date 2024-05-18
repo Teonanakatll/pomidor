@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.generics import get_object_or_404
 from rest_framework.test import APITestCase
 
@@ -19,9 +20,9 @@ class BooksApiTestCase(APITestCase):
         # для всех манипуляций с обьектами нужно быть авторизованным
         self.client.force_login(self.user)
 
-        self.book_1 = Book.objects.create(name='Test Boooook 1', price=250, author_name='Author 1')
-        self.book_2 = Book.objects.create(name='Test Boooook 2', price=750, author_name='Author 3')
-        self.book_3 = Book.objects.create(name='Test Boooook Author 1', price=550, author_name='Author 2')
+        self.book_1 = Book.objects.create(name='Test Boooook 1', price=250, author_name='Author 1', owner=self.user)
+        self.book_2 = Book.objects.create(name='Test Boooook 2', price=750, author_name='Author 3', owner=self.user)
+        self.book_3 = Book.objects.create(name='Test Boooook Author 1', price=550, author_name='Author 2', owner=self.user)
 
     def test_get_list(self):
         url = reverse('book-list')
@@ -131,6 +132,63 @@ class BooksApiTestCase(APITestCase):
         # self.assertEqual(book_price, Book.objects.get(id=self.book_1.id).price)
         self.assertEqual(book_price, self.book_1.price)
 
+    # негативный тест (на безопасность), проверим perrmission class IsOwnerOrReadOnly пытаемся обновить запись не овнером
+    def test_update_not_owner(self):
+        self.user2 = User.objects.create(username='not_owner')
+        # логинимся под вторым юзером
+        self.client.force_login(self.user2)
+
+        # с помощю args передаём в url id книги которую хотим изменить
+        url = reverse('book-detail', args=(self.book_1.id,))
+        # переменная для нового значения
+        book_price = 3000
+        data = {
+            "name": self.book_1.name,
+            "price": book_price,
+            "author_name": self.book_1.author_name
+        }
+        # преобразуем данные в json для отправки
+        json_data = json.dumps(data)
+
+        response = self.client.put(url, data=json_data, content_type='application/json')
+
+        self.assertEqual({'detail': ErrorDetail(string='У вас недостаточно прав для выполнения данного действия.'
+                                                , code='permission_denied')}, response.data)
+
+        # обновляем переменную данными иэ дб
+        self.book_1.refresh_from_db()
+
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        # проверим что цена не изменилась
+        self.assertEqual(250, self.book_1.price)
+
+    def test_update_not_owner_but_staff(self):
+        # создаём юзера персонала
+        self.user2 = User.objects.create(username='staff', is_staff=True)
+        # логинимся под вторым юзером
+        self.client.force_login(self.user2)
+        # с помощю args передаём в url id книги которую хотим изменить
+        url = reverse('book-detail', args=(self.book_1.id,))
+        # переменная для нового значения
+        book_price = 3000
+        data = {
+            "name": self.book_1.name,
+            "price": book_price,
+            "author_name": self.book_1.author_name
+        }
+        # преобразуем данные в json для отправки
+        json_data = json.dumps(data)
+
+        response = self.client.put(url, data=json_data, content_type='application/json')
+
+        # обновляем переменную данными иэ дб
+        self.book_1.refresh_from_db()
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        # проверим что цена не изменилась
+        self.assertEqual(3000, self.book_1.price)
+
+    # негативный тест delete, удаление не под owner
     def test_delete(self):
         # с помощю args передаём в url id книги которую хотим удалить
         url = reverse('book-detail', args=(self.book_3.id,))
@@ -145,3 +203,20 @@ class BooksApiTestCase(APITestCase):
         # проверим заполнение полей
         # self.assertEqual(book_price, Book.objects.get(id=self.book_1.id).price)
         self.assertEqual(False, delete_book)
+
+    def test_delete_not_owner(self):
+        self.user2 = User.objects.create(username='not_owner')
+        self.client.force_login(self.user2)
+        # с помощю args передаём в url id книги которую хотим удалить
+        url = reverse('book-detail', args=(self.book_3.id,))
+
+        response = self.client.delete(url)
+        # print(response.status_code)
+
+        delete_book = Book.objects.filter(id=self.book_3.id).exists()
+        # print(delete_book)
+        # print(response.data)
+
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        # проверим что запись существует
+        self.assertEqual(True, delete_book)
