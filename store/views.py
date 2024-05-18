@@ -1,6 +1,7 @@
-
+from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from store.models import Book
@@ -17,3 +18,7 @@ class BookViewSet(ModelViewSet):
     filterset_fields = ['price']
     search_fields = ['name', 'author_name']
     ordering_fields = ['price', 'author_name']
+    permission_classes = [IsAuthenticated]
+
+def auth(request):
+    return render(request, 'store/oauth.html')

@@ -44,7 +44,10 @@ INSTALLED_APPS = [
     'rest_framework',
     # чтобы дрф использовал свою стандартную таблицу токенов
     'rest_framework.authtoken',
+    # jwt токены
     'djoser',
+    # social-auth-app-django
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -123,6 +126,24 @@ USE_I18N = True
 
 USE_TZ = True
 
+# авторизация через социальные сети, чтобы этот пакет мог пользоваться djsonfield-ом в постгресе
+SOCIAL_AUTH_POSTGRES_JSONFIELD_ENABLED = True
+
+# изменить namespace django-social
+SOCIAL_AUTH_URL_NAMESPACE = 'socialll'
+
+# <a href="{% url "social:begin" "google-oauth2" %}">Google+</a>
+
+SOCIAL_AUTH_GITHUB_KEY = 'Ov23likMDGjlasZIuAC0'
+SOCIAL_AUTH_GITHUB_SECRET = '8ead03fffc8d921a873ebc7fec56b3d138f77c57'
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.twitter.TwitterOAuth',
+
+    'social_core.backends.github.GithubOAuth2',
+
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

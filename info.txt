@@ -1,0 +1,5 @@
+
+# для фильтрации в drf
+django-filter
+# для авторизации через социольные сети
+social-auth-app-django

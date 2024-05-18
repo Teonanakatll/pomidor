@@ -15,13 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.template.defaulttags import url
 from django.urls import path, include, re_path
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
 from drf.views import WomenAPIList, \
     WomenAPIUpdate, WomenAPIDestroy  # WomenViewSet, WomenAPIList, WomenAPIUpdate, WomenAPIDetailView,   # WomenAPIView,
-from store.views import BookViewSet
+from store.views import BookViewSet, auth
 
 router_book = SimpleRouter()
 # router_women = DefaultRouter()
@@ -35,7 +36,9 @@ router_book.register(r'book', BookViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
+    # social-django
+    re_path('', include('social_django.urls', namespace='socialll')),
+    path('auth/', auth),
 
 
     # авторизация на основе сессий и cookies
