@@ -22,7 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from drf.views import WomenAPIList, \
     WomenAPIUpdate, WomenAPIDestroy  # WomenViewSet, WomenAPIList, WomenAPIUpdate, WomenAPIDetailView,   # WomenAPIView,
-from store.views import BookViewSet, auth
+from store.views import BookViewSet, auth, UserBookRelationView
 
 router_book = SimpleRouter()
 # router_women = DefaultRouter()
@@ -32,6 +32,7 @@ router_book = SimpleRouter()
 # регистрируем наш путь в роутере, можно использовать необязательный аргумент namespase=,
 # basename=  используется если  нет параметра queryset
 router_book.register(r'book', BookViewSet)
+router_book.register(r'book_relation', UserBookRelationView)
 # router_women.register(r'women', WomenViewSet)
 
 urlpatterns = [

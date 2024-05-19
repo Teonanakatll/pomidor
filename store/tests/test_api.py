@@ -7,7 +7,7 @@ from rest_framework.exceptions import ErrorDetail
 from rest_framework.generics import get_object_or_404
 from rest_framework.test import APITestCase
 
-from store.models import Book
+from store.models import Book, UserBookRelation
 from store.serializers import BooksSerializer
 
 
@@ -26,7 +26,7 @@ class BooksApiTestCase(APITestCase):
 
     def test_get_list(self):
         url = reverse('book-list')
-        print(url)
+        # print(url)
         # client - клиентский запрос по апи адресу
         response = self.client.get(url)
         # print(response.data)
@@ -39,7 +39,7 @@ class BooksApiTestCase(APITestCase):
 
     def test_get_detail(self):
         url = reverse('book-detail', args=(self.book_2.id,))
-        print(url)
+        # print(url)
         # client - клиентский запрос по апи адресу
         response = self.client.get(url)
         # print(response.data)
@@ -52,7 +52,7 @@ class BooksApiTestCase(APITestCase):
 
     def test_get_search(self):
         url = reverse('book-list')
-        print(url)
+        # print(url)
         # client - клиентский запрос но апи, передаём get-запросом словарь с запросом на поисе
         response = self.client.get(url, data={'search': 'Author 1'})
         # отправляем в сериализатор модели, data - чтобы получить данные
@@ -63,7 +63,7 @@ class BooksApiTestCase(APITestCase):
 
     def test_get_ordering(self):
         url = reverse('book-list')
-        print(url)
+        # print(url)
         # client - клиентский запрос но апи, передаём get-запросом словарь с запросом на поисе
         response = self.client.get(url, data={'ordering': 'price'})
         # отправляем в сериализатор модели, data - чтобы получить данные
@@ -73,7 +73,7 @@ class BooksApiTestCase(APITestCase):
 
     def test_get_filter(self):
         url = reverse('book-list')
-        print(url)
+        # print(url)
         # client - клиентский запрос но апи, передаём get-запросом словарь с запросом на поисе
         response = self.client.get(url, data={'price': '750'})
         # отправляем в сериализатор модели, data - чтобы получить данные
@@ -196,7 +196,7 @@ class BooksApiTestCase(APITestCase):
         response = self.client.delete(url)
 
         delete_book = Book.objects.filter(id=self.book_3.id).exists()
-        print(delete_book)
+        # print(delete_book)
         # print(response.data)
 
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
@@ -220,3 +220,100 @@ class BooksApiTestCase(APITestCase):
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         # проверим что запись существует
         self.assertEqual(True, delete_book)
+
+
+class BooksRelationTestCase(APITestCase):
+    # функция запускается каждый раз перед каждым тестом
+    def setUp(self):
+        # создаём юзера для добавления и изменения записей
+        self.user = User.objects.create(username='test_username')
+        self.user2 = User.objects.create(username='test_username2')
+
+        # для всех манипуляций с обьектами нужно быть авторизованным
+        self.client.force_login(self.user)
+
+        self.book_1 = Book.objects.create(name='Test Boooook 1', price=250, author_name='Author 1', owner=self.user)
+        self.book_2 = Book.objects.create(name='Test Boooook 2', price=750, author_name='Author 3', owner=self.user)
+
+    def test_like(self):
+        url = reverse('userbookrelation-detail', args=(self.book_1.id,))
+        # print(url)
+
+        data = {
+            'like': True,
+        }
+
+        json_data = json.dumps(data)
+
+        # метод patch такой-же как и put, только методом patch можно передавать несколько полей, при put все
+        # например передать только лайк
+
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        relation = UserBookRelation.objects.get(user=self.user, book=self.book_1)
+        # проверяем что лайк стоит
+        self.assertTrue(relation.like)
+
+        data = {
+            'in_bookmarks': True,
+        }
+        json_data = json.dumps(data)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        relation = UserBookRelation.objects.get(user=self.user, book=self.book_1)
+        self.assertTrue(relation.in_bookmarks)
+
+    def test_rate(self):
+        url = reverse('userbookrelation-detail', args=(self.book_1.id,))
+        data = {
+            'rate': 3,
+        }
+        json_data = json.dumps(data)
+        # метод patch такой-же как и put, только методом patch можно передавать несколько полей, при put все
+        # например передать только лайк
+
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        relation = UserBookRelation.objects.get(user=self.user, book=self.book_1)
+        # проверяем что лайк стоит
+        self.assertEqual(3, relation.rate)
+
+    def test_rate_wrong(self):
+        url = reverse('userbookrelation-detail', args=(self.book_1.id,))
+        data = {
+            'rate': 6,
+        }
+        json_data = json.dumps(data)
+        # метод patch такой-же как и put, только методом patch можно передавать несколько полей, при put все
+        # например передать только лайк
+
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        # выводим response.data при неудачном сравнении
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code, response.data)
+        relation = UserBookRelation.objects.get(user=self.user, book=self.book_1)
+        # проверяем что лайк стоит
+        self.assertEqual(None, relation.rate)
+
+    def test_favorite(self):
+        # формируем url и добавляем в него позиционным параметром id книги
+        url = reverse('userbookrelation-detail', args=(self.book_1.id,))
+        # создаём данные котрые хотим передать
+        data = {
+            'favorite': True,
+        }
+        # переводим их в формат json
+        json_data = json.dumps(data)
+
+        # отправляем клиент patch запрос на сформ url с json данными, одбавляем параметр content_type=applications/json
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        # проверяем статус ответа сервера
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        # достаём обьект из бд
+        relation = UserBookRelation.objects.get(user=self.user, book=self.book_1)
+        # print('relation', relation)
+        # проверим что связь добавлена
+        self.assertEqual(True, relation.favorite, response.data)
+
+

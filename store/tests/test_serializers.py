@@ -10,13 +10,16 @@ class BookSerializerTestCase(TestCase):
     def test_ok(self):
 
         # создаём юзера для добавления и изменения записей
-        self.user = User.objects.create(username='test_username')
+        # self.user = User.objects.create(username='test_username')
+        # self.user2 = User.objects.create(username='reader_username')
 
         # для всех манипуляций с обьектами нужно быть авторизованным
         # self.client.force_login(self.user)
 
-        book_1 = Book.objects.create(name='Test Book 1', author_name='Author 1', price=250, owner=self.user)
-        book_2 = Book.objects.create(name='Test Book 2', author_name='Author 2', price=550, owner=self.user)
+        book_1 = Book.objects.create(name='Test Book 1',
+                                     author_name='Author 1', price=250)
+        book_2 = Book.objects.create(name='Test Book 2',
+                                     author_name='Author 2', price=550)
 
         data = BooksSerializer([book_1, book_2], many=True).data
         print(data)
@@ -25,15 +28,13 @@ class BookSerializerTestCase(TestCase):
                 'id': book_1.id,
                 'name': 'Test Book 1',
                 'price': '250.00',
-                'author_name': 'Author 1',
-                'owner': book_1.owner.id
+                'author_name': 'Author 1'
             },
             {
                 'id': book_2.id,
                 'name': 'Test Book 2',
                 'price': '550.00',
-                'author_name': 'Author 2',
-                'owner': book_2.owner.id
+                'author_name': 'Author 2'
             }
         ]
 
