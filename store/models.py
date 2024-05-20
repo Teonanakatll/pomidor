@@ -6,6 +6,7 @@ class Book(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название')
     price = models.DecimalField(max_digits=7, decimal_places=2, verbose_name='Цена')
     author_name = models.CharField(max_length=255, verbose_name='Имя Автора')
+    discount = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Скидка')
     # создаём поле owner для того чтобы понимоть кто автор запсис
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='my_books', verbose_name='Автор')
     # явно связываем отношение ManyToMany через нашу таблицу, чтобы добавить в неё дополнительные поля

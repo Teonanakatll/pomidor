@@ -1,3 +1,6 @@
+
+
+from django.db.models import Count, When, Case, Avg, F
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -9,9 +12,20 @@ from store.models import Book, UserBookRelation
 from store.permissions import IsOwnerOrStaffOrReadOnly
 from store.serializers import BooksSerializer, UserBookRelationSerializer
 
-
+# Добавление дополнительных действий в маршрутизацию
+# Если у вас есть специальные методы, которые должны быть маршрутизируемыми, вы можете пометить их как таковые с помощью
+# декоратора @action. Как и обычные действия, дополнительные действия могут быть предназначены как для одного объекта,
+# так и для целой коллекции. Чтобы указать это, установите аргумент detail в True или False. Маршрутизатор настроит свои
+# шаблоны URL соответствующим образом. Например, DefaultRouter настроит подробные действия так, чтобы они содержали pk в
+# своих шаблонах URL. Два новых действия будут доступны по адресам ^users/{pk}/set_password/$ и
+# ^users/{pk}/unset_password/$
 class BookViewSet(ModelViewSet):
-    queryset = Book.objects.all()
+    # F-класс служот для обращения к полям текущей модели в орм запросах
+    # Q-класс служит для записи условий фильтрации полей текущей модели при логических конструкциях в орм джанго
+    queryset = Book.objects.all().annotate(annotated_likes=
+                                           Count(Case(When(userbookrelation__like=True, then=1))),
+                                           rating=Avg('userbookrelation__rate'),
+                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
     serializer_class = BooksSerializer
     # фильтрация, поиск и сортировка drf ?filter=, ?search= , ?ordering=
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -46,6 +60,6 @@ class UserBookRelationView(UpdateModelMixin, GenericViewSet):
         # если юзер первый раз ставит лайк то мы не сможем получить его UserBookRelation, в таком случае создаём эту свзь
         # передаём юзера и именованный параметр 'book' пришедший через lookup_field
         obj, created = UserBookRelation.objects.get_or_create(user=self.request.user, book_id=self.kwargs['book'])
-        print('created', created)
+        # print('created', created)
 
         return obj

@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.models import User
+from django.db.models import Count, When, Case, Avg, F
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -24,16 +25,26 @@ class BooksApiTestCase(APITestCase):
         self.book_2 = Book.objects.create(name='Test Boooook 2', price=750, author_name='Author 3', owner=self.user)
         self.book_3 = Book.objects.create(name='Test Boooook Author 1', price=550, author_name='Author 2', owner=self.user)
 
+        self.relation1 = UserBookRelation.objects.create(user=self.user, book=self.book_1, rate=5, like=True)
+
     def test_get_list(self):
         url = reverse('book-list')
         # print(url)
         # client - клиентский запрос по апи адресу
         response = self.client.get(url)
+        # сериализатор отправляет кверисет с анотированным полем, поэтому дабавим его
+        books = Book.objects.all().annotate(annotated_likes=
+                                           Count(Case(When(userbookrelation__like=True, then=1))),
+                                           rating=Avg('userbookrelation__rate'),
+                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
         # print(response.data)
         # отправляем в сериализатор модели, data - чтобы получить сераализованные данные
-        serializer_data = BooksSerializer([self.book_1, self.book_2, self.book_3], many=True).data
+        serializer_data = BooksSerializer(books, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
+        self.assertEqual(serializer_data[0]['rating'], '5.00')
+        self.assertEqual(serializer_data[0]['likes_count'], 1)
+        self.assertEqual(serializer_data[0]['annotated_likes'], 1)
         # print(serializer_data)
         # print(response.data)
 
@@ -43,20 +54,33 @@ class BooksApiTestCase(APITestCase):
         # client - клиентский запрос по апи адресу
         response = self.client.get(url)
         # print(response.data)
+        # сериализатор отправляет кверисет с анотированным полем, поэтому дабавим его
+        books = Book.objects.filter(id=self.book_2.id).annotate(annotated_likes=
+                                                                Count(Case(When(userbookrelation__like=True, then=1))),
+                                                                rating=Avg('userbookrelation__rate'),
+                                                                price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
+        book = books[0]
         # отправляем в сериализатор модели, data - чтобы получить сераализованные данные
-        serializer_data = BooksSerializer(self.book_2).data
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(serializer_data, response.data)
+        serializer_data = BooksSerializer(book, many=False).data
         # print(serializer_data)
         # print(response.data)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(serializer_data, response.data)
+
+
 
     def test_get_search(self):
         url = reverse('book-list')
         # print(url)
         # client - клиентский запрос но апи, передаём get-запросом словарь с запросом на поисе
         response = self.client.get(url, data={'search': 'Author 1'})
+        # сериализатор отправляет кверисет с анотированными полями, поэтому дабавим их
+        books = Book.objects.filter(id__in=[self.book_1.id, self.book_3.id]).annotate(annotated_likes=
+                                           Count(Case(When(userbookrelation__like=True, then=1))),
+                                           rating=Avg('userbookrelation__rate'),
+                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
         # отправляем в сериализатор модели, data - чтобы получить данные
-        serializer_data = BooksSerializer([self.book_1, self.book_3], many=True).data
+        serializer_data = BooksSerializer(books, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
 
@@ -66,8 +90,15 @@ class BooksApiTestCase(APITestCase):
         # print(url)
         # client - клиентский запрос но апи, передаём get-запросом словарь с запросом на поисе
         response = self.client.get(url, data={'ordering': 'price'})
+        # сериализатор отправляет кверисет с анотированными полями, поэтому дабавим их
+        books = Book.objects.all().annotate(annotated_likes=
+                                           Count(Case(When(userbookrelation__like=True, then=1))),
+                                           rating=Avg('userbookrelation__rate'),
+                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount')))
+
+        books = [books[0], books[2], books[1]]
         # отправляем в сериализатор модели, data - чтобы получить данные
-        serializer_data = BooksSerializer([self.book_1, self.book_3, self.book_2], many=True).data
+        serializer_data = BooksSerializer(books, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
 
@@ -76,8 +107,15 @@ class BooksApiTestCase(APITestCase):
         # print(url)
         # client - клиентский запрос но апи, передаём get-запросом словарь с запросом на поисе
         response = self.client.get(url, data={'price': '750'})
+        # сериализатор отправляет кверисет с анотированными полями, поэтому дабавим их
+        books = Book.objects.filter(id=self.book_2.id).annotate(annotated_likes=
+                                           Count(Case(When(userbookrelation__like=True, then=1))),
+                                           rating=Avg('userbookrelation__rate'),
+                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount')))
         # отправляем в сериализатор модели, data - чтобы получить данные
-        serializer_data = BooksSerializer([self.book_2], many=True).data
+        serializer_data = BooksSerializer(books, many=True).data
+        # print(serializer_data)
+        # print(response.data)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
 
@@ -122,7 +160,7 @@ class BooksApiTestCase(APITestCase):
 
         # new_book = BooksSerializer(Book.objects.get(id=self.book_1.id)).data
         # print(new_book)
-        # print(response.data)
+        # print('Data:', response.data)
 
         # обновляем переменную данными иэ дб
         self.book_1.refresh_from_db()
