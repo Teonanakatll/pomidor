@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import UniqueConstraint
 
 
 class Book(models.Model):
@@ -20,6 +21,12 @@ class Book(models.Model):
         return f"Id {self.id}: {self.name}"
 
 class UserBookRelation(models.Model):
+    # проверки и условия при создании связи ManyToMany:
+    # CheckConstraint - Объект Q или булево Expression, который определяет проверку, которую вы хотите, чтобы ограничение выполняло.
+    # CheckConstraint(check=Q(age__gte=18), name='age_gte_18') гарантирует, что поле возраст никогда не будет меньше 18.
+    # UniqueConstrain - Список имен полей, определяющий уникальный набор столбцов, на которые необходимо наложить ограничение.
+    # UniqueConstraint(fields=['room', 'date'], name='unique_booking') гарантирует, что каждый номер может быть забронирован
+    # только один раз на каждую дату.
     RATE_CHOICES = (
         (1, 'Ok'),
         (2, 'Fine'),
@@ -37,4 +44,8 @@ class UserBookRelation(models.Model):
 
     def __str__(self):
         return f"{self.user}: {self.book.name}, RATE {self.rate}"
+
+    class Meta:
+        # ограничения для связи ManyToMany: не может существовоть двух записей с одинаковыми значениями полей
+        constraints = [UniqueConstraint(fields=['user', 'book'], name='unique-like')]
 

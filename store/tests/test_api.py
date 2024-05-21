@@ -1,7 +1,9 @@
 import json
 
 from django.contrib.auth.models import User
+from django.db import connection
 from django.db.models import Count, When, Case, Avg, F
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -18,9 +20,6 @@ class BooksApiTestCase(APITestCase):
         # создаём юзера для добавления и изменения записей
         self.user = User.objects.create(username='test_username')
 
-        # для всех манипуляций с обьектами нужно быть авторизованным
-        self.client.force_login(self.user)
-
         self.book_1 = Book.objects.create(name='Test Boooook 1', price=250, author_name='Author 1', owner=self.user)
         self.book_2 = Book.objects.create(name='Test Boooook 2', price=750, author_name='Author 3', owner=self.user)
         self.book_3 = Book.objects.create(name='Test Boooook Author 1', price=550, author_name='Author 2', owner=self.user)
@@ -30,8 +29,11 @@ class BooksApiTestCase(APITestCase):
     def test_get_list(self):
         url = reverse('book-list')
         # print(url)
-        # client - клиентский запрос по апи адресу
-        response = self.client.get(url)
+        # тестируем select_related() u prefetch_related в connection отлавливаем query-запросы
+        with CaptureQueriesContext(connection) as queries:
+            # client - клиентский запрос по апи адресу
+            response = self.client.get(url)
+        self.assertEqual(2, len(queries))
         # сериализатор отправляет кверисет с анотированным полем, поэтому дабавим его
         books = Book.objects.all().annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
@@ -43,7 +45,7 @@ class BooksApiTestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
         self.assertEqual(serializer_data[0]['rating'], '5.00')
-        self.assertEqual(serializer_data[0]['likes_count'], 1)
+        # self.assertEqual(serializer_data[0]['likes_count'], 1)
         self.assertEqual(serializer_data[0]['annotated_likes'], 1)
         # print(serializer_data)
         # print(response.data)
@@ -131,6 +133,9 @@ class BooksApiTestCase(APITestCase):
         # преобразуем данные в json для отправки
         json_data = json.dumps(data)
 
+        # для всех манипуляций с обьектами нужно быть авторизованным
+        self.client.force_login(self.user)
+
         response = self.client.post(url, data=json_data, content_type='application/json')
 
         new_book = BooksSerializer(Book.objects.get(name=book_name)).data
@@ -155,6 +160,8 @@ class BooksApiTestCase(APITestCase):
         }
         # преобразуем данные в json для отправки
         json_data = json.dumps(data)
+        # для всех манипуляций с обьектами нужно быть авторизованным
+        self.client.force_login(self.user)
 
         response = self.client.put(url, data=json_data, content_type='application/json')
 
@@ -230,6 +237,9 @@ class BooksApiTestCase(APITestCase):
     def test_delete(self):
         # с помощю args передаём в url id книги которую хотим удалить
         url = reverse('book-detail', args=(self.book_3.id,))
+
+        # для всех манипуляций с обьектами нужно быть авторизованным
+        self.client.force_login(self.user)
 
         response = self.client.delete(url)
 

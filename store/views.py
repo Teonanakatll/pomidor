@@ -22,10 +22,13 @@ from store.serializers import BooksSerializer, UserBookRelationSerializer
 class BookViewSet(ModelViewSet):
     # F-класс служот для обращения к полям текущей модели в орм запросах
     # Q-класс служит для записи условий фильтрации полей текущей модели при логических конструкциях в орм джанго
+    # select_related() - выбирает один обьект связанный с книгой (ForeignKey)
+    # prefetch_related() - выбирает все связанные обьекты (ManyToMany)
     queryset = Book.objects.all().annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
                                            rating=Avg('userbookrelation__rate'),
-                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
+                                           price_with_discount=(F('price')-(F('price') / 100) * F('discount')))\
+                                           .select_related('owner').prefetch_related('readers').order_by('id')
     serializer_class = BooksSerializer
     # фильтрация, поиск и сортировка drf ?filter=, ?search= , ?ordering=
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -36,7 +39,7 @@ class BookViewSet(ModelViewSet):
     ordering_fields = ['price', 'author_name']
     permission_classes = [IsOwnerOrStaffOrReadOnly]
 
-    # переопределяем метод для того чтобы добавить юзера
+    # переопределяем метод для того чтобы добавить юзера в сериализатор
     def perform_create(self, serializer):
         # донные сериолизатора после того как он прошёл валидацию, добавляем юзера из request
         # так как create-запрос у нас может делать только зарегистрированный пользователь проверять не надо
