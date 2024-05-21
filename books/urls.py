@@ -14,12 +14,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.template.defaulttags import url
 from django.urls import path, include, re_path
 from rest_framework.routers import SimpleRouter, DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
+from books import settings
 from drf.views import WomenAPIList, \
     WomenAPIUpdate, WomenAPIDestroy  # WomenViewSet, WomenAPIList, WomenAPIUpdate, WomenAPIDetailView,   # WomenAPIView,
 from store.views import BookViewSet, auth, UserBookRelationView
@@ -32,6 +34,7 @@ router_book = SimpleRouter()
 # регистрируем наш путь в роутере, можно использовать необязательный аргумент namespase=,
 # basename=  используется если  нет параметра queryset
 router_book.register(r'book', BookViewSet)
+# регистрируем путь к UserBookRelation
 router_book.register(r'book_relation', UserBookRelationView)
 # router_women.register(r'women', WomenViewSet)
 
@@ -40,6 +43,7 @@ urlpatterns = [
     # social-django
     re_path('', include('social_django.urls', namespace='socialll')),
     path('auth/', auth),
+    # path("__debug__/", include("debug_toolbar.urls")),
 
 
     # авторизация на основе сессий и cookies
@@ -67,3 +71,9 @@ urlpatterns = [
     # path('api/v1/womenlist/<int:pk>/', WomenAPIUpdate.as_view()),
     # path('api/v1/womendetail/<int:pk>/', WomenAPIDetailView.as_view()),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

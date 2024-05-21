@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # чтобы debug-toolbar работол с api pip install django-debug-toolbar-force
+    # чтобы видеть панель дебакера вконце каждого урла писать - ?debug-toolbar
+    'debug_toolbar',
 
     'store.apps.StoreConfig',
     'drf.apps.DrfConfig',
@@ -58,6 +61,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'debug_toolbar_force.middleware.ForceDebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'books.urls'
@@ -149,6 +154,12 @@ AUTHENTICATION_BACKENDS = (
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = []
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -160,13 +171,15 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     # 'PAGE_SIZE': 2,
 
-    # отрисовка данных ответа
+    # отрисовка данных ответа, Сериализованные данные для дальнейшей передачи по сети нужно перевести (отрендерить) в
+    # json-формат — универсальный текстовый формат передачи данных, не зависящий от языка реализации
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         # api браузера (красивая отрисовка
         # 'rest_framework.renderers.BrowsableAPIRenderer',
     ],
     'DEFAULT_PARSER_CLASSES': (
+        # Анализирует содержимое запроса JSON . request.data будет заполнен словарем данных.
         'rest_framework.parsers.JSONParser',
     )
     # глобальное ограничение доступа на уровне всего проекта
