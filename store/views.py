@@ -26,7 +26,7 @@ class BookViewSet(ModelViewSet):
     # prefetch_related() - выбирает все связанные обьекты (ManyToMany)
     queryset = Book.objects.all().annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
-                                           rating=Avg('userbookrelation__rate'),
+                                           # rating=Avg('userbookrelation__rate'),
                                            price_with_discount=(F('price')-(F('price') / 100) * F('discount')))\
                                            .select_related('owner').prefetch_related('readers').order_by('id')
     serializer_class = BooksSerializer

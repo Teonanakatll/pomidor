@@ -37,13 +37,14 @@ class BooksApiTestCase(APITestCase):
         # сериализатор отправляет кверисет с анотированным полем, поэтому дабавим его
         books = Book.objects.all().annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
-                                           rating=Avg('userbookrelation__rate'),
+                                           # rating=Avg('userbookrelation__rate'),
                                            price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
         # print(response.data)
         # отправляем в сериализатор модели, data - чтобы получить сераализованные данные
         serializer_data = BooksSerializer(books, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
+        # print('RATING:', serializer_data[0])
         self.assertEqual(serializer_data[0]['rating'], '5.00')
         # self.assertEqual(serializer_data[0]['likes_count'], 1)
         self.assertEqual(serializer_data[0]['annotated_likes'], 1)
@@ -59,7 +60,7 @@ class BooksApiTestCase(APITestCase):
         # сериализатор отправляет кверисет с анотированным полем, поэтому дабавим его
         books = Book.objects.filter(id=self.book_2.id).annotate(annotated_likes=
                                                                 Count(Case(When(userbookrelation__like=True, then=1))),
-                                                                rating=Avg('userbookrelation__rate'),
+                                                                # rating=Avg('userbookrelation__rate'),
                                                                 price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
         book = books[0]
         # отправляем в сериализатор модели, data - чтобы получить сераализованные данные
@@ -79,7 +80,7 @@ class BooksApiTestCase(APITestCase):
         # сериализатор отправляет кверисет с анотированными полями, поэтому дабавим их
         books = Book.objects.filter(id__in=[self.book_1.id, self.book_3.id]).annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
-                                           rating=Avg('userbookrelation__rate'),
+                                           # rating=Avg('userbookrelation__rate'),
                                            price_with_discount=(F('price')-(F('price') / 100) * F('discount'))).order_by('id')
         # отправляем в сериализатор модели, data - чтобы получить данные
         serializer_data = BooksSerializer(books, many=True).data
@@ -95,7 +96,7 @@ class BooksApiTestCase(APITestCase):
         # сериализатор отправляет кверисет с анотированными полями, поэтому дабавим их
         books = Book.objects.all().annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
-                                           rating=Avg('userbookrelation__rate'),
+                                           # rating=Avg('userbookrelation__rate'),
                                            price_with_discount=(F('price')-(F('price') / 100) * F('discount')))
 
         books = [books[0], books[2], books[1]]
@@ -112,7 +113,7 @@ class BooksApiTestCase(APITestCase):
         # сериализатор отправляет кверисет с анотированными полями, поэтому дабавим их
         books = Book.objects.filter(id=self.book_2.id).annotate(annotated_likes=
                                            Count(Case(When(userbookrelation__like=True, then=1))),
-                                           rating=Avg('userbookrelation__rate'),
+                                           # rating=Avg('userbookrelation__rate'),
                                            price_with_discount=(F('price')-(F('price') / 100) * F('discount')))
         # отправляем в сериализатор модели, data - чтобы получить данные
         serializer_data = BooksSerializer(books, many=True).data

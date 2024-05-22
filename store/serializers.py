@@ -32,8 +32,8 @@ class BooksSerializer(ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ('id', 'name', 'author_name',
-                  'annotated_likes', 'rating', 'price', 'discount',
+        fields = ('id', 'name', 'rating', 'author_name',
+                  'annotated_likes', 'price', 'discount',
                   'price_with_discount', 'owner_name', 'readers')
 
     # добавляем свою функцию в созданный метод, эта также можно сделать с помощю анотации
