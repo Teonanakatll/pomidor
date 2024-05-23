@@ -17,7 +17,10 @@ class BookReaderSerializer(ModelSerializer):
 class BooksSerializer(ModelSerializer):
     # дописываем своё поле с методом, поле будет хранить аннатацию с подсчётом лайков к каждой книге
     # likes_count u annotated_likes две реализации одного и того же результата, N+1
-    # likes_count = serializers.SerializerMethodField()
+
+    # соглашение об использавании имён SerializerMethodField с префиксом get_название переменной
+    # price = serializers.SerializerMethodField()
+
     annotated_likes = serializers.IntegerField(read_only=True)
     rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
     price_with_discount = serializers.DecimalField(max_digits=7, decimal_places=2, read_only=True)
@@ -29,6 +32,10 @@ class BooksSerializer(ModelSerializer):
     # через связь ManyToMany (поле readers), поле должно называться как и поле в модели Book те readers
     # если хотим указать другое имя, то необходимо указать source='readers' в параметрах
     readers = BookReaderSerializer(many=True, read_only=True)
+
+    # def get_price(self, instance):
+    #     return (instance.price -
+    #             instance.price * (instance.discount / 100))
 
     class Meta:
         model = Book
